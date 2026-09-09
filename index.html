@@ -134,57 +134,44 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ================== the climb ==================
-     six frames of ONE place: the same pigeon on the same stone ball, camera
-     closer each step, the day later each step. between neighbours we cross fade
-     AND keep zooming, so the scrub reads as a single push-in, not a slideshow. */
-  var FR = [
-    /* src, zoom at start of segment, zoom at end, focal x, focal y (where the bird is) */
-    { src:'f1', zs:1.00, ze:2.40, fx:.51, fy:.34 },
-    { src:'f2', zs:1.00, ze:1.20, fx:.50, fy:.40 },
-    { src:'f3', zs:1.20, ze:1.36, fx:.50, fy:.40 },
-    { src:'f4', zs:1.36, ze:1.50, fx:.50, fy:.40 },
-    { src:'f5', zs:1.50, ze:1.62, fx:.50, fy:.42 },
-    { src:'f6', zs:1.62, ze:1.85, fx:.50, fy:.42 }
-  ];
-  var N = FR.length, IM = [];
-  FR.forEach(function(f, i){ var im = new Image(); im.src = 'assets/' + f.src + '.webp'; im.onload = function(){ dirty = true; }; IM[i] = im; });
-
+     six renders of ONE place, the same green pigeon on the same tower: the camera
+     a step closer each frame, the day a step later. no zoom in the canvas, only a
+     cross fade between neighbours, exactly the gote scrub. frames are 640x480 and
+     upscaled without smoothing, that is where the PS2 look comes from. */
+  var N = 6, IM = [];
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
   var hero = document.getElementById('hero'), word = document.getElementById('word'), hint = document.getElementById('hint'), eye = document.getElementById('eye'), line = document.getElementById('line');
-  var PIX = .5;   /* draw at half resolution and upscale without smoothing: the PS2 look */
+  var lastKey = -1, dirty = true;
+  for(var i = 0; i < N; i++){ var im = new Image(); im.onload = function(){ dirty = true; }; im.src = 'assets/f' + (i + 1) + '.jpg'; IM[i] = im; }
+
   function resize(){
-    var w = Math.max(1, Math.floor(cv.clientWidth * PIX)), h = Math.max(1, Math.floor(cv.clientHeight * PIX));
+    var d = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.max(1, Math.floor(cv.clientWidth * d)), h = Math.max(1, Math.floor(cv.clientHeight * d));
     if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
     ctx.imageSmoothingEnabled = false;
   }
-  function paint(im, f, zoom, alpha){
+  function paint(im, alpha){
     if(!im || !im.complete || !im.naturalWidth) return;
-    var W = cv.width, H = cv.height;
-    var cover = Math.max(W / im.naturalWidth, H / im.naturalHeight) * zoom;
-    var w = im.naturalWidth * cover, h = im.naturalHeight * cover;
-    /* keep the focal point of the frame pinned to the same screen point while we zoom */
-    var x = W * .5 - w * f.fx, y = H * .44 - h * f.fy;
-    x = Math.min(0, Math.max(W - w, x)); y = Math.min(0, Math.max(H - h, y));
     ctx.globalAlpha = alpha;
-    ctx.drawImage(im, x, y, w, h);
+    var s = Math.max(cv.width / im.naturalWidth, cv.height / im.naturalHeight);
+    var w = im.naturalWidth * s, h = im.naturalHeight * s;
+    ctx.drawImage(im, (cv.width - w) / 2, (cv.height - h) * 0.35, w, h);
     ctx.globalAlpha = 1;
   }
-  var lastKey = -1, dirty = true;
   function draw(p){
     resize();
     var f = p * (N - 1), idx = Math.min(N - 1, Math.floor(f)), frac = f - idx;
-    var key = idx * 1000 + Math.round(frac * 48);
+    var key = idx * 100 + Math.round(frac * 24);
     if(key === lastKey && !dirty) return;
     lastKey = key; dirty = false;
     ctx.fillStyle = '#0b1020'; ctx.fillRect(0, 0, cv.width, cv.height);
-    var a = FR[idx], ea = frac * frac * (3 - 2 * frac);
-    paint(IM[idx], a, a.zs + (a.ze - a.zs) * ea, 1);
-    if(frac > 0 && FR[idx + 1]){ var b = FR[idx + 1]; paint(IM[idx + 1], b, b.zs, ea); }
+    paint(IM[idx], 1);
+    if(frac > 0 && IM[idx + 1]) paint(IM[idx + 1], frac);
   }
 
   var TXT = [
     ['Highest point in the city · occupants: 1', 'He took the highest spot in the city and never said why. <b>Nobody has asked him to come down.</b>'],
-    ['Late morning · same ball', 'The city woke up under him. <b>He watched it happen and had no notes.</b>'],
+    ['Late morning · same tower', 'The city woke up under him. <b>He watched it happen and had no notes.</b>'],
     ['Afternoon · still there', 'Boats went out, boats came back. <b>He counted none of them.</b>'],
     ['Golden hour · not moving', 'The light got good and he took it personally. <b>Stayed exactly where he was.</b>'],
     ['Dusk · lights coming on', 'Everyone below went home. <b>He does not have one of those.</b>'],
