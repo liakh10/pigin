@@ -3,3 +3,5 @@
 scripts/node_modules
 scripts/src
 src
+.claude/
+.env*
