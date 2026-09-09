@@ -19,7 +19,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:hidden}
-body{background:var(--night);color:var(--paper);font-family:var(--mono);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{background:var(--night);color:var(--paper);font-family:var(--mono);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
 img{display:block;max-width:100%}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -147,7 +147,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     { src:'f6', zs:1.62, ze:1.85, fx:.50, fy:.42 }
   ];
   var N = FR.length, IM = [];
-  FR.forEach(function(f, i){ var im = new Image(); im.src = 'assets/' + f.src + '.webp'; im.onload = function(){ if(i < 2) dirty = true; }; IM[i] = im; });
+  FR.forEach(function(f, i){ var im = new Image(); im.src = 'assets/' + f.src + '.webp'; im.onload = function(){ dirty = true; }; IM[i] = im; });
 
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
   var hero = document.getElementById('hero'), word = document.getElementById('word'), hint = document.getElementById('hint'), eye = document.getElementById('eye'), line = document.getElementById('line');
