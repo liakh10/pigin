@@ -85,17 +85,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .again:hover{color:var(--paper)}
 
 /* ---------- the sightings: a drawer of memes, and one big look at each ---------- */
-.gal{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:var(--pad);background:rgba(6,9,20,.86)}
-.gal.on{display:grid}
-.galbox{width:min(1000px,100%);max-height:88svh;overflow:auto;background:#0f1730;border:2px solid var(--paper);box-shadow:6px 6px 0 #182338;padding:clamp(12px,2vw,20px)}
-.galbox .row{display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
-.galbox .row b{font-family:var(--disp);font-weight:400;font-size:22px;letter-spacing:.06em;color:var(--paper)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.grid button{position:relative;display:block;padding:0;border:2px solid rgba(243,236,216,.35);background:#0b1020;transition:border-color .15s,transform .12s}
+/* the sightings sit in the open, straight in the menu, the way gote puts them out */
+.grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.grid button{position:relative;display:block;padding:0;border:2px solid rgba(243,236,216,.32);background:#0b1020;transition:border-color .15s,transform .12s}
 .grid button:hover{border-color:var(--paper);transform:translate(-1px,-1px)}
-.grid img{width:100%;aspect-ratio:4/3;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
-.xbtn{font-family:var(--mono);font-size:14px;line-height:1;color:var(--dim);padding:4px 6px;transition:color .15s}
-.xbtn:hover{color:var(--paper)}
+.grid img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
 
 .lb{position:fixed;inset:0;z-index:30;display:none;place-items:center;padding:var(--pad);background:rgba(6,9,20,.94)}
 .lb.on{display:grid}
@@ -115,7 +109,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .tl span{display:none}
   .word{max-width:calc(100% - var(--pad)*2)}
   .word h1{font-size:74px}
-  .grid{grid-template-columns:repeat(2,1fr)}
+  .grid{grid-template-columns:repeat(3,1fr)}
   .skip{bottom:auto;top:var(--pad)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition-duration:.01ms !important}}
@@ -158,16 +152,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
         <a class="key buy" data-link="pons" href="https://www.ponsfamily.com/launchpad">Buy on Pons<img class="pmark" src="assets/pons-mark.png" alt="" /></a>
         <a class="key" data-link="dex" href="https://dexscreener.com/robinhood">Chart<img class="ico" src="assets/ic-dex.svg" alt="" /></a>
         <a class="key" data-link="x" href="https://x.com" aria-label="X">X</a>
-        <button class="key" id="galbtn">Sightings</button>
       </div>
       <button class="again" id="again">Watch again</button>
     </div>
-  </div>
-</div>
-
-<div class="gal" id="gal">
-  <div class="galbox">
-    <div class="row"><b>Sightings</b><span>Six · same bird · same hat</span><button class="xbtn" id="galx" aria-label="Close">&#10005;</button></div>
     <div class="grid" id="grid"></div>
   </div>
 </div>
@@ -307,8 +294,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     ['Sat on the line, nobody moved him', 'pigin on a laundry line in an alley'],
     ['Warmest seat in the city', 'pigin on a smoking chimney at sunset']
   ];
-  var gal = document.getElementById('gal'), grid = document.getElementById('grid'),
-      lb = document.getElementById('lb'), lbimg = document.getElementById('lbimg'),
+  var grid = document.getElementById('grid'), lb = document.getElementById('lb'), lbimg = document.getElementById('lbimg'),
       lbcap = document.getElementById('lbcap'), lbn = document.getElementById('lbn'), gi = 0;
   grid.innerHTML = SEEN.map(function(m, i){
     return '<button data-i="' + i + '" aria-label="' + m[1] + '"><img data-src="assets/tg' + (i + 1) + '.webp" alt="' + m[1] + '" /></button>';
@@ -322,9 +308,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     lbcap.textContent = SEEN[gi][0]; lbn.textContent = (gi + 1) + ' / ' + SEEN.length;
     lb.classList.add('on');
   }
-  document.getElementById('galbtn').addEventListener('click', function(){ warmThumbs(); gal.classList.add('on'); });
-  document.getElementById('galx').addEventListener('click', function(){ gal.classList.remove('on'); });
-  gal.addEventListener('click', function(e){ if(e.target === gal) gal.classList.remove('on'); });
   grid.addEventListener('click', function(e){ var b = e.target.closest('button'); if(b) show(+b.dataset.i); });
   document.getElementById('lbprev').addEventListener('click', function(){ show(gi - 1); });
   document.getElementById('lbnext').addEventListener('click', function(){ show(gi + 1); });
@@ -335,9 +318,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       if(e.key === 'Escape') lb.classList.remove('on');
       if(e.key === 'ArrowLeft') show(gi - 1);
       if(e.key === 'ArrowRight') show(gi + 1);
-      return;
     }
-    if(gal.classList.contains('on') && e.key === 'Escape') gal.classList.remove('on');
   });
 
   /* ---- departure board ---- */
