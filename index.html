@@ -84,6 +84,29 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .again{justify-self:start;font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#48526a;transition:color .2s}
 .again:hover{color:var(--paper)}
 
+/* ---------- the sightings: a drawer of memes, and one big look at each ---------- */
+.gal{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:var(--pad);background:rgba(6,9,20,.86)}
+.gal.on{display:grid}
+.galbox{width:min(1000px,100%);max-height:88svh;overflow:auto;background:#0f1730;border:2px solid var(--paper);box-shadow:6px 6px 0 #182338;padding:clamp(12px,2vw,20px)}
+.galbox .row{display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+.galbox .row b{font-family:var(--disp);font-weight:400;font-size:22px;letter-spacing:.06em;color:var(--paper)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid button{position:relative;display:block;padding:0;border:2px solid rgba(243,236,216,.35);background:#0b1020;transition:border-color .15s,transform .12s}
+.grid button:hover{border-color:var(--paper);transform:translate(-1px,-1px)}
+.grid img{width:100%;aspect-ratio:4/3;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
+.xbtn{font-family:var(--mono);font-size:14px;line-height:1;color:var(--dim);padding:4px 6px;transition:color .15s}
+.xbtn:hover{color:var(--paper)}
+
+.lb{position:fixed;inset:0;z-index:30;display:none;place-items:center;padding:var(--pad);background:rgba(6,9,20,.94)}
+.lb.on{display:grid}
+.lbin{width:min(1080px,100%);display:grid;gap:10px;justify-items:center}
+.lb img{width:100%;max-height:74svh;object-fit:contain;border:2px solid var(--paper);box-shadow:6px 6px 0 #182338;image-rendering:pixelated;image-rendering:crisp-edges}
+.lbbar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.lbbar .cap{color:rgba(243,236,216,.82);letter-spacing:.12em;text-transform:none;font-size:12px}
+.lbnav{display:flex;gap:6px}
+.lbnav button{border:2px solid var(--paper);background:rgba(11,16,32,.6);color:var(--paper);width:34px;height:30px;box-shadow:3px 3px 0 #182338;font-family:var(--disp);font-size:17px;line-height:1}
+.lbnav button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #182338}
+
 @media (max-width:900px){
   .sheet{grid-template-columns:1fr;align-items:start;gap:16px}
   .mark h2{font-size:clamp(52px,15vw,84px)}
@@ -92,6 +115,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .tl span{display:none}
   .word{max-width:calc(100% - var(--pad)*2)}
   .word h1{font-size:74px}
+  .grid{grid-template-columns:repeat(2,1fr)}
   .skip{bottom:auto;top:var(--pad)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition-duration:.01ms !important}}
@@ -134,8 +158,26 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
         <a class="key buy" data-link="pons" href="https://www.ponsfamily.com/launchpad">Buy on Pons<img class="pmark" src="assets/pons-mark.png" alt="" /></a>
         <a class="key" data-link="dex" href="https://dexscreener.com/robinhood">Chart<img class="ico" src="assets/ic-dex.svg" alt="" /></a>
         <a class="key" data-link="x" href="https://x.com" aria-label="X">X</a>
+        <button class="key" id="galbtn">Sightings</button>
       </div>
       <button class="again" id="again">Watch again</button>
+    </div>
+  </div>
+</div>
+
+<div class="gal" id="gal">
+  <div class="galbox">
+    <div class="row"><b>Sightings</b><span>Six · same bird · same hat</span><button class="xbtn" id="galx" aria-label="Close">&#10005;</button></div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<div class="lb" id="lb">
+  <div class="lbin">
+    <img id="lbimg" src="" alt="" />
+    <div class="lbbar">
+      <span class="cap" id="lbcap"></span>
+      <span class="lbnav"><button id="lbprev" aria-label="Previous">&#8249;</button><span id="lbn" style="align-self:center;padding:0 6px"></span><button id="lbnext" aria-label="Next">&#8250;</button><button id="lbx" aria-label="Close">&#10005;</button></span>
     </div>
   </div>
 </div>
@@ -232,7 +274,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     if(done) return; done = true; running = false;
     draw(N - 1, 0);
     word.classList.add('hide'); skip.classList.add('gone');
-    menu.classList.add('on');
+    menu.classList.add('on'); warmThumbs();
     document.getElementById('hudl').classList.add('on'); document.getElementById('hudr').classList.add('on');
     roll();
   }
@@ -255,6 +297,48 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
   if(reduce){ words(N - 1); draw(N - 1, 0); setTimeout(finish, 300); }
   else { words(0); start(); }
+
+  /* ---- sightings: the drawer, and the big look ---- */
+  var SEEN = [
+    ['Took it from the rich, kept it at altitude', 'pigin on a heap of gold coins in a torchlit treasury'],
+    ['Weather happened to everyone else', 'pigin on a weather vane in heavy rain'],
+    ['The bell rang, he did not', 'pigin beside a swinging church bell'],
+    ['The only one up here with a job', 'pigin on the shoulder of a stone knight'],
+    ['Sat on the line, nobody moved him', 'pigin on a laundry line in an alley'],
+    ['Warmest seat in the city', 'pigin on a smoking chimney at sunset']
+  ];
+  var gal = document.getElementById('gal'), grid = document.getElementById('grid'),
+      lb = document.getElementById('lb'), lbimg = document.getElementById('lbimg'),
+      lbcap = document.getElementById('lbcap'), lbn = document.getElementById('lbn'), gi = 0;
+  grid.innerHTML = SEEN.map(function(m, i){
+    return '<button data-i="' + i + '" aria-label="' + m[1] + '"><img data-src="assets/tg' + (i + 1) + '.webp" alt="' + m[1] + '" /></button>';
+  }).join('');
+  function warmThumbs(){
+    grid.querySelectorAll('img[data-src]').forEach(function(i){ i.src = i.dataset.src; i.removeAttribute('data-src'); });
+  }
+  function show(k){
+    gi = (k + SEEN.length) % SEEN.length;
+    lbimg.src = 'assets/g' + (gi + 1) + '.webp'; lbimg.alt = SEEN[gi][1];
+    lbcap.textContent = SEEN[gi][0]; lbn.textContent = (gi + 1) + ' / ' + SEEN.length;
+    lb.classList.add('on');
+  }
+  document.getElementById('galbtn').addEventListener('click', function(){ warmThumbs(); gal.classList.add('on'); });
+  document.getElementById('galx').addEventListener('click', function(){ gal.classList.remove('on'); });
+  gal.addEventListener('click', function(e){ if(e.target === gal) gal.classList.remove('on'); });
+  grid.addEventListener('click', function(e){ var b = e.target.closest('button'); if(b) show(+b.dataset.i); });
+  document.getElementById('lbprev').addEventListener('click', function(){ show(gi - 1); });
+  document.getElementById('lbnext').addEventListener('click', function(){ show(gi + 1); });
+  document.getElementById('lbx').addEventListener('click', function(){ lb.classList.remove('on'); });
+  lb.addEventListener('click', function(e){ if(e.target === lb) lb.classList.remove('on'); });
+  document.addEventListener('keydown', function(e){
+    if(lb.classList.contains('on')){
+      if(e.key === 'Escape') lb.classList.remove('on');
+      if(e.key === 'ArrowLeft') show(gi - 1);
+      if(e.key === 'ArrowRight') show(gi + 1);
+      return;
+    }
+    if(gal.classList.contains('on') && e.key === 'Escape') gal.classList.remove('on');
+  });
 
   /* ---- departure board ---- */
   var flap = document.getElementById('flap'), board = document.getElementById('board'), cp = document.getElementById('cp');
