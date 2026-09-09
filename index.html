@@ -31,7 +31,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .crt{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(rgba(0,0,0,.16) 0 1px,transparent 1px 3px);opacity:.5}
 .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 74% at 50% 46%,rgba(11,16,32,0) 46%,rgba(11,16,32,.78))}
 
-.word{position:absolute;left:var(--pad);bottom:calc(var(--pad) + 30px);z-index:3;pointer-events:none;max-width:min(640px,80vw);transition:opacity .7s}
+.word{position:absolute;left:var(--pad);bottom:calc(var(--pad) + 8px);z-index:3;pointer-events:none;max-width:min(640px,80vw);transition:opacity .7s}
 .word.hide{opacity:0}
 .word .eye{font-family:var(--mono);font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:rgba(243,236,216,.7);margin-bottom:8px}
 .word h1{font-family:var(--disp);font-size:clamp(88px,19vw,240px);line-height:.78;letter-spacing:.02em;color:var(--paper);
@@ -43,12 +43,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .said{display:block;transition:opacity .45s}
 .said.out{opacity:0}
 
-/* six ticks at the very bottom: which slide is up, how far it has run */
-.ticks{position:fixed;left:var(--pad);right:var(--pad);bottom:calc(var(--pad) - 4px);z-index:4;display:flex;gap:5px;transition:opacity .6s}
-.ticks.gone{opacity:0}
-.ticks i{flex:1;height:2px;background:rgba(243,236,216,.22);position:relative;overflow:hidden}
-.ticks i b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--paper)}
-.skip{position:fixed;right:var(--pad);bottom:calc(var(--pad) + 14px);z-index:5;font-family:var(--mono);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(243,236,216,.55);transition:opacity .5s,color .2s}
+.skip{position:fixed;right:var(--pad);bottom:var(--pad);z-index:5;font-family:var(--mono);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(243,236,216,.55);transition:opacity .5s,color .2s}
 .skip:hover{color:var(--paper)}
 .skip.gone{opacity:0;pointer-events:none}
 
@@ -120,7 +115,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   </div>
 </section>
 
-<div class="ticks" id="ticks"></div>
 <button class="skip" id="skip">Skip</button>
 
 <div class="menu" id="menu">
@@ -169,20 +163,17 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
      a step closer each slide, the day a step later. the slides run on their own,
      a hold and then a cross fade into the next one, no scrolling anywhere. */
   var N = 6, IM = [];
-  var STEP = 3.4;      /* seconds a slide owns */
-  var HOLD = .58;      /* the first part of that is a still hold, the rest fades over */
-  var TAIL = 2.2;      /* he sits on the last one before the menu comes up */
+  var STEP = 2.6;      /* seconds a slide owns */
+  var HOLD = .56;      /* the first part of that is a still hold, the rest fades over */
+  var TAIL = 1.6;      /* he sits on the last one before the menu comes up */
   var SPAN = (N - 1) * STEP, TOTAL = SPAN + TAIL;
 
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
   var word = document.getElementById('word'), eye = document.getElementById('eye'), line = document.getElementById('line');
-  var menu = document.getElementById('menu'), ticks = document.getElementById('ticks'), skip = document.getElementById('skip');
+  var menu = document.getElementById('menu'), skip = document.getElementById('skip');
   var dirty = true, lastKey = -1, t0 = 0, running = false, done = false;
 
   for(var i = 0; i < N; i++){ var im = new Image(); im.onload = function(){ dirty = true; }; im.src = 'assets/f' + (i + 1) + '.jpg'; IM[i] = im; }
-
-  var bars = [];
-  for(var b = 0; b < N; b++){ var t = document.createElement('i'); var f = document.createElement('b'); t.appendChild(f); ticks.appendChild(t); bars.push(f); }
 
   function resize(){
     var d = Math.min(window.devicePixelRatio || 1, 2);
@@ -237,17 +228,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     var c = Math.max(0, Math.min(1, (u - HOLD) / (1 - HOLD)));
     return { idx:k, frac:c * c * (3 - 2 * c), k:(c > .5 ? k + 1 : k) };
   }
-  function marks(t){
-    for(var j = 0; j < N; j++){
-      var v = t < j * STEP ? 0 : (t > (j + 1) * STEP ? 1 : (t - j * STEP) / STEP);
-      if(j === N - 1) v = t < SPAN ? 0 : Math.min(1, (t - SPAN) / TAIL);
-      bars[j].style.width = (v * 100) + '%';
-    }
-  }
   function finish(){
     if(done) return; done = true; running = false;
-    draw(N - 1, 0); marks(TOTAL);
-    word.classList.add('hide'); ticks.classList.add('gone'); skip.classList.add('gone');
+    draw(N - 1, 0);
+    word.classList.add('hide'); skip.classList.add('gone');
     menu.classList.add('on');
     document.getElementById('hudl').classList.add('on'); document.getElementById('hudr').classList.add('on');
     roll();
@@ -256,12 +240,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     if(!running) return;
     var t = (performance.now() - t0) / 1000;
     if(t >= TOTAL){ finish(); return; }
-    var s = at(t); draw(s.idx, s.frac); words(s.k); marks(t);
+    var s = at(t); draw(s.idx, s.frac); words(s.k);
     requestAnimationFrame(loop);
   }
   function start(){
     done = false; curT = -1; lastKey = -1; dirty = true;
-    word.classList.remove('hide'); ticks.classList.remove('gone'); skip.classList.remove('gone');
+    word.classList.remove('hide'); skip.classList.remove('gone');
     menu.classList.remove('on');
     t0 = performance.now(); running = true; requestAnimationFrame(loop);
   }
