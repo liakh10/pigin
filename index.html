@@ -8,6 +8,7 @@
 <meta name="description" content="he took the highest spot in the city and never said why" />
 <link rel="icon" type="image/png" href="assets/favicon.png" />
 <link rel="apple-touch-icon" href="assets/apple-icon.png" />
+<link rel="preload" as="image" href="assets/f1.jpg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Jersey+15&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -18,34 +19,42 @@
   --pad:clamp(14px,2.4vw,32px);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{overflow-x:hidden}
+html,body{height:100%;overflow:hidden}
 body{background:var(--night);color:var(--paper);font-family:var(--mono);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
 img{display:block;max-width:100%}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
-/* ---------- hero: one long scrub ---------- */
-.hero{position:relative;height:640vh}
-.sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#0b1020}
+/* ---------- the reel: six slides of one place, running on their own ---------- */
+.stage{position:fixed;inset:0;overflow:hidden;background:#0b1020;z-index:1}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 .crt{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(rgba(0,0,0,.16) 0 1px,transparent 1px 3px);opacity:.5}
 .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 74% at 50% 46%,rgba(11,16,32,0) 46%,rgba(11,16,32,.78))}
 
-.word{position:absolute;left:var(--pad);bottom:calc(var(--pad) + 8px);z-index:3;pointer-events:none;max-width:min(640px,80vw)}
-.word .eye{font-family:var(--mono);font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:rgba(243,236,216,.7);margin-bottom:8px;transition:opacity .4s}
+.word{position:absolute;left:var(--pad);bottom:calc(var(--pad) + 30px);z-index:3;pointer-events:none;max-width:min(640px,80vw);transition:opacity .7s}
+.word.hide{opacity:0}
+.word .eye{font-family:var(--mono);font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:rgba(243,236,216,.7);margin-bottom:8px}
 .word h1{font-family:var(--disp);font-size:clamp(88px,19vw,240px);line-height:.78;letter-spacing:.02em;color:var(--paper);
   text-shadow:0 0 22px rgba(0,0,0,.55),5px 5px 0 #182338;transition:color .9s,text-shadow .9s}
 .word.dusk h1{color:#ffcf6a;text-shadow:0 0 30px rgba(255,150,60,.35),5px 5px 0 #3a1a12}
 .word.night h1{color:#cfe0ff;text-shadow:0 0 34px rgba(120,160,255,.35),5px 5px 0 #0a0f22}
 .word p{margin-top:10px;font-size:clamp(12px,1.3vw,15px);line-height:1.55;color:rgba(243,236,216,.86);max-width:44ch;text-shadow:0 1px 8px rgba(0,0,0,.8)}
 .word p b{font-weight:600;color:var(--paper)}
-.hint{position:absolute;right:var(--pad);bottom:var(--pad);z-index:3;font-family:var(--mono);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(243,236,216,.6);transition:opacity .4s}
-.hint em{font-style:normal;display:inline-block;margin-left:6px;animation:nod 1.2s ease-in-out infinite}
-@keyframes nod{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
-.hint.gone{opacity:0}
+.said{display:block;transition:opacity .45s}
+.said.out{opacity:0}
 
-/* ---------- hud ---------- */
-.hud{position:fixed;z-index:9;display:flex;gap:6px;align-items:center}
+/* six ticks at the very bottom: which slide is up, how far it has run */
+.ticks{position:fixed;left:var(--pad);right:var(--pad);bottom:calc(var(--pad) - 4px);z-index:4;display:flex;gap:5px;transition:opacity .6s}
+.ticks.gone{opacity:0}
+.ticks i{flex:1;height:2px;background:rgba(243,236,216,.22);position:relative;overflow:hidden}
+.ticks i b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--paper)}
+.skip{position:fixed;right:var(--pad);bottom:calc(var(--pad) + 14px);z-index:5;font-family:var(--mono);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(243,236,216,.55);transition:opacity .5s,color .2s}
+.skip:hover{color:var(--paper)}
+.skip.gone{opacity:0;pointer-events:none}
+
+/* ---------- hud: stays out of the way until the reel is done ---------- */
+.hud{position:fixed;z-index:9;display:flex;gap:6px;align-items:center;opacity:0;pointer-events:none;transition:opacity .8s}
+.hud.on{opacity:1;pointer-events:auto}
 .tl{left:var(--pad);top:var(--pad)}
 .tr{right:var(--pad);top:var(--pad)}
 .key{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:32px;padding:0 12px;font-family:var(--disp);font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:var(--paper);background:rgba(11,16,32,.55);border:2px solid var(--paper);box-shadow:3px 3px 0 #182338;transition:transform .12s,box-shadow .12s}
@@ -54,68 +63,88 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .key img.av{width:20px;height:20px;border:1px solid var(--paper)}
 .key.buy{background:var(--paper);color:var(--night)}
 .pmark{width:14px;height:14px;min-width:14px;object-fit:contain}
+.key .ico{width:15px;height:15px;min-width:15px;object-fit:contain}
 
-/* ---------- after the climb: contract on the departure board ---------- */
-.end{position:relative;z-index:2;background:var(--night);min-height:100svh;display:grid;place-content:center;justify-items:center;gap:clamp(14px,2vw,22px);padding:clamp(50px,8vw,110px) var(--pad);text-align:center}
-.end h2{font-family:var(--disp);font-size:clamp(40px,8vw,110px);line-height:.82;letter-spacing:.02em}
-.end h2 em{font-style:normal;color:#ffcf6a}
-.end .ln{font-size:13px;color:var(--dim);max-width:44ch}
-.board{width:min(720px,94vw);background:#0f1730;border:2px solid var(--paper);box-shadow:5px 5px 0 #182338;padding:clamp(14px,2vw,20px);cursor:pointer}
-.board .row{display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
-.flap{margin-top:12px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
-.flap i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;min-width:clamp(15px,2.4vw,25px);height:clamp(22px,3.4vw,36px);padding:0 2px;
-  background:#1a2444;font-family:var(--mono);font-weight:600;font-size:clamp(11px,1.7vw,17px);color:var(--paper);box-shadow:inset 0 -2px 0 rgba(0,0,0,.5)}
-.flap i.soonword{background:none;box-shadow:none;font-family:var(--disp);font-weight:400;font-size:clamp(44px,9vw,96px);min-width:auto;height:auto;letter-spacing:.03em;line-height:.9}
-.board .cp{margin-top:14px;display:block;width:100%;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+/* ---------- the menu that comes up once he is done looking at the city ---------- */
+.menu{position:fixed;left:0;right:0;bottom:0;z-index:8;transform:translateY(103%);transition:transform 1.05s cubic-bezier(.16,.86,.26,1);
+  padding:clamp(26px,5vw,44px) var(--pad) calc(var(--pad) + 6px);
+  background:linear-gradient(180deg,rgba(11,16,32,0),rgba(11,16,32,.86) 22%,rgba(11,16,32,.97) 46%,#0b1020 78%);
+  max-height:92svh;overflow:auto}
+.menu.on{transform:translateY(0)}
+.sheet{width:min(1080px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(0,auto) minmax(320px,1fr);gap:clamp(18px,3vw,44px);align-items:end}
+.mark h2{font-family:var(--disp);font-size:clamp(58px,11vw,132px);line-height:.8;letter-spacing:.02em;color:#cfe0ff;text-shadow:0 0 30px rgba(120,160,255,.3),5px 5px 0 #0a0f22}
+.mark .tk{margin-top:8px;font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#ffcf6a}
+.mark .ln{margin-top:8px;font-size:12.5px;color:var(--dim);max-width:34ch}
+.right{display:grid;gap:10px;justify-items:stretch}
+.board{background:#0f1730;border:2px solid var(--paper);box-shadow:5px 5px 0 #182338;padding:clamp(12px,1.7vw,18px);cursor:pointer}
+.board .row{display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.flap{margin-top:10px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.flap i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;min-width:clamp(14px,2.1vw,22px);height:clamp(20px,3vw,32px);padding:0 2px;
+  background:#1a2444;font-family:var(--mono);font-weight:600;font-size:clamp(10px,1.5vw,15px);color:var(--paper);box-shadow:inset 0 -2px 0 rgba(0,0,0,.5)}
+.flap i.soonword{background:none;box-shadow:none;font-family:var(--disp);font-weight:400;font-size:clamp(38px,7vw,72px);min-width:auto;height:auto;letter-spacing:.03em;line-height:.9}
+.board .cp{margin-top:10px;display:block;width:100%;text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
 .board.live .cp{color:#ffcf6a}
-.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.fine{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#48526a}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns .key{flex:1 1 auto}
+.again{justify-self:start;font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#48526a;transition:color .2s}
+.again:hover{color:var(--paper)}
 
-@media (max-width:820px){
+@media (max-width:900px){
+  .sheet{grid-template-columns:1fr;align-items:start;gap:16px}
+  .mark h2{font-size:clamp(52px,15vw,84px)}
+  .mark .ln{display:none}
   .tr .key.buy span{display:none}
   .tl span{display:none}
   .word{max-width:calc(100% - var(--pad)*2)}
   .word h1{font-size:74px}
-  .hint{bottom:auto;top:calc(var(--pad) + 44px)}
+  .skip{bottom:auto;top:var(--pad)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition-duration:.01ms !important}}
 </style>
 </head>
 <body>
 
-<a class="hud tl key" href="./"><img class="av" src="assets/avatar.webp" alt="" /><span data-name>pigin</span></a>
-<nav class="hud tr">
+<a class="hud tl key" id="hudl" href="./"><img class="av" src="assets/avatar.webp" alt="" /><span data-name>pigin</span></a>
+<nav class="hud tr" id="hudr">
   <a class="key buy" data-link="pons" href="https://www.ponsfamily.com/launchpad"><span>Buy</span><img class="pmark" src="assets/pons-mark.png" alt="" /></a>
   <a class="key" data-link="x" href="https://x.com" aria-label="X">X</a>
 </nav>
 
-<section class="hero" id="hero">
-  <div class="sticky">
-    <canvas id="cv"></canvas>
-    <div class="crt"></div><div class="vig"></div>
-    <div class="word" id="word">
-      <div class="eye" id="eye">Highest point in the city · occupants: 1</div>
-      <h1 data-name>pigin</h1>
-      <p id="line">He took the highest spot in the city and never said why. <b>Nobody has asked him to come down.</b></p>
-    </div>
-    <div class="hint" id="hint">Scroll<em>v</em></div>
+<section class="stage">
+  <canvas id="cv"></canvas>
+  <div class="crt"></div><div class="vig"></div>
+  <div class="word" id="word">
+    <div class="eye"><span class="said" id="eye">Highest point in the city · occupants: 1</span></div>
+    <h1 data-name>pigin</h1>
+    <p><span class="said" id="line">He took the highest spot in the city and never said why. <b>Nobody has asked him to come down.</b></span></p>
   </div>
 </section>
 
-<section class="end">
-  <h2>still<br /><em>up there</em></h2>
-  <p class="ln">the address is on the board, the bird is on the ball, neither is moving</p>
-  <div class="board" id="board">
-    <div class="row"><span>Contract</span><span>Robinhood Chain · Pons</span></div>
-    <div class="flap" id="flap"></div>
-    <button class="cp" id="cp">Copy</button>
+<div class="ticks" id="ticks"></div>
+<button class="skip" id="skip">Skip</button>
+
+<div class="menu" id="menu">
+  <div class="sheet">
+    <div class="mark">
+      <h2 data-name>pigin</h2>
+      <div class="tk" data-ticker>$PIGIN</div>
+      <div class="ln">still up there, still not coming down</div>
+    </div>
+    <div class="right">
+      <div class="board" id="board">
+        <div class="row"><span>Contract</span><span>Robinhood Chain · Pons</span></div>
+        <div class="flap" id="flap"></div>
+        <button class="cp" id="cp">Copy</button>
+      </div>
+      <div class="btns">
+        <a class="key buy" data-link="pons" href="https://www.ponsfamily.com/launchpad">Buy on Pons<img class="pmark" src="assets/pons-mark.png" alt="" /></a>
+        <a class="key" data-link="dex" href="https://dexscreener.com/robinhood">Chart<img class="ico" src="assets/ic-dex.svg" alt="" /></a>
+        <a class="key" data-link="x" href="https://x.com" aria-label="X">X</a>
+      </div>
+      <button class="again" id="again">Watch again</button>
+    </div>
   </div>
-  <div class="btns">
-    <a class="key buy" data-link="pons" href="https://www.ponsfamily.com/launchpad">Buy on Pons<img class="pmark" src="assets/pons-mark.png" alt="" /></a>
-    <a class="key" data-link="x" href="https://x.com" aria-label="X">X</a>
-  </div>
-  <div class="fine" data-name>pigin</div>
-</section>
+</div>
 
 <audio id="bgm" src="assets/music.mp3" loop preload="none"></audio>
 
@@ -123,8 +152,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 (function(){
   var S = window.SITE, CA = (S.CA||"SOON").trim(), HAS = CA !== "SOON" && CA !== "";
   document.querySelectorAll('[data-name]').forEach(function(e){ e.textContent = S.NAME; });
+  document.querySelectorAll('[data-ticker]').forEach(function(e){ e.textContent = S.TICKER; });
   document.title = S.NAME;
   document.querySelectorAll('[data-link="pons"]').forEach(function(a){ a.href = HAS ? window.PONS_HOME + '/' + CA : window.PONS_HOME; a.target='_blank'; a.rel='noopener'; });
+  document.querySelectorAll('[data-link="dex"]').forEach(function(a){ a.href = HAS ? window.DEX_HOME + '/' + CA : window.DEX_HOME; a.target='_blank'; a.rel='noopener'; });
   document.querySelectorAll('[data-link="x"]').forEach(function(a){ a.href = S.X_URL || 'https://x.com'; a.target='_blank'; a.rel='noopener'; });
 
   var bgm = document.getElementById('bgm'), armed = false, ok = true;
@@ -133,21 +164,30 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   document.addEventListener('pointerdown', arm, true); document.addEventListener('keydown', arm, true);
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ================== the climb ==================
+  /* ================== the reel ==================
      six renders of ONE place, the same green pigeon on the same tower: the camera
-     a step closer each frame, the day a step later. no zoom in the canvas, only a
-     cross fade between neighbours, exactly the gote scrub. frames are 640x480 and
-     upscaled without smoothing, that is where the PS2 look comes from. */
+     a step closer each slide, the day a step later. the slides run on their own,
+     a hold and then a cross fade into the next one, no scrolling anywhere. */
   var N = 6, IM = [];
+  var STEP = 3.4;      /* seconds a slide owns */
+  var HOLD = .58;      /* the first part of that is a still hold, the rest fades over */
+  var TAIL = 2.2;      /* he sits on the last one before the menu comes up */
+  var SPAN = (N - 1) * STEP, TOTAL = SPAN + TAIL;
+
   var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-  var hero = document.getElementById('hero'), word = document.getElementById('word'), hint = document.getElementById('hint'), eye = document.getElementById('eye'), line = document.getElementById('line');
-  var lastKey = -1, dirty = true;
+  var word = document.getElementById('word'), eye = document.getElementById('eye'), line = document.getElementById('line');
+  var menu = document.getElementById('menu'), ticks = document.getElementById('ticks'), skip = document.getElementById('skip');
+  var dirty = true, lastKey = -1, t0 = 0, running = false, done = false;
+
   for(var i = 0; i < N; i++){ var im = new Image(); im.onload = function(){ dirty = true; }; im.src = 'assets/f' + (i + 1) + '.jpg'; IM[i] = im; }
+
+  var bars = [];
+  for(var b = 0; b < N; b++){ var t = document.createElement('i'); var f = document.createElement('b'); t.appendChild(f); ticks.appendChild(t); bars.push(f); }
 
   function resize(){
     var d = Math.min(window.devicePixelRatio || 1, 2);
     var w = Math.max(1, Math.floor(cv.clientWidth * d)), h = Math.max(1, Math.floor(cv.clientHeight * d));
-    if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+    if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; dirty = true; }
     ctx.imageSmoothingEnabled = false;
   }
   function paint(im, alpha){
@@ -158,9 +198,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     ctx.drawImage(im, (cv.width - w) / 2, (cv.height - h) * 0.35, w, h);
     ctx.globalAlpha = 1;
   }
-  function draw(p){
+  function draw(idx, frac){
     resize();
-    var f = p * (N - 1), idx = Math.min(N - 1, Math.floor(f)), frac = f - idx;
     var key = idx * 100 + Math.round(frac * 24);
     if(key === lastKey && !dirty) return;
     lastKey = key; dirty = false;
@@ -178,23 +217,60 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     ['Night · this is the face', 'The whole city glows and he is the highest thing in it. <b>That is the entire plan.</b>']
   ];
   var curT = -1;
-  function words(p){
-    var k = Math.min(N - 1, Math.floor(p * (N - 1) + .5));
-    if(k === curT) return; curT = k;
-    eye.textContent = TXT[k][0]; line.innerHTML = TXT[k][1];
+  function words(k){
+    if(k === curT) return;
+    var first = curT < 0; curT = k;
     word.classList.toggle('dusk', k === 3 || k === 4);
     word.classList.toggle('night', k === 5);
+    if(first || reduce){ eye.textContent = TXT[k][0]; line.innerHTML = TXT[k][1]; return; }
+    eye.classList.add('out'); line.classList.add('out');
+    setTimeout(function(){
+      eye.textContent = TXT[curT][0]; line.innerHTML = TXT[curT][1];
+      eye.classList.remove('out'); line.classList.remove('out');
+    }, 260);
   }
 
+  /* the clock, not the scrollbar, decides where we are */
+  function at(t){
+    if(t >= SPAN) return { idx:N - 1, frac:0, k:N - 1 };
+    var k = Math.floor(t / STEP), u = (t - k * STEP) / STEP;
+    var c = Math.max(0, Math.min(1, (u - HOLD) / (1 - HOLD)));
+    return { idx:k, frac:c * c * (3 - 2 * c), k:(c > .5 ? k + 1 : k) };
+  }
+  function marks(t){
+    for(var j = 0; j < N; j++){
+      var v = t < j * STEP ? 0 : (t > (j + 1) * STEP ? 1 : (t - j * STEP) / STEP);
+      if(j === N - 1) v = t < SPAN ? 0 : Math.min(1, (t - SPAN) / TAIL);
+      bars[j].style.width = (v * 100) + '%';
+    }
+  }
+  function finish(){
+    if(done) return; done = true; running = false;
+    draw(N - 1, 0); marks(TOTAL);
+    word.classList.add('hide'); ticks.classList.add('gone'); skip.classList.add('gone');
+    menu.classList.add('on');
+    document.getElementById('hudl').classList.add('on'); document.getElementById('hudr').classList.add('on');
+    roll();
+  }
   function loop(){
-    var r = hero.getBoundingClientRect(), span = hero.offsetHeight - (innerHeight || 800);
-    var p = span > 0 ? Math.max(0, Math.min(1, -r.top / span)) : 0;
-    draw(p); words(p);
-    hint.classList.toggle('gone', p > .03);
+    if(!running) return;
+    var t = (performance.now() - t0) / 1000;
+    if(t >= TOTAL){ finish(); return; }
+    var s = at(t); draw(s.idx, s.frac); words(s.k); marks(t);
     requestAnimationFrame(loop);
   }
-  addEventListener('resize', function(){ lastKey = -1; dirty = true; });
-  requestAnimationFrame(loop);
+  function start(){
+    done = false; curT = -1; lastKey = -1; dirty = true;
+    word.classList.remove('hide'); ticks.classList.remove('gone'); skip.classList.remove('gone');
+    menu.classList.remove('on');
+    t0 = performance.now(); running = true; requestAnimationFrame(loop);
+  }
+  addEventListener('resize', function(){ lastKey = -1; dirty = true; if(!running){ draw(N - 1, 0); } });
+  skip.addEventListener('click', finish);
+  document.getElementById('again').addEventListener('click', function(){ words(0); start(); });
+
+  if(reduce){ words(N - 1); draw(N - 1, 0); setTimeout(finish, 300); }
+  else { words(0); start(); }
 
   /* ---- departure board ---- */
   var flap = document.getElementById('flap'), board = document.getElementById('board'), cp = document.getElementById('cp');
@@ -214,7 +290,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       var t = setInterval(function(){ c.el.textContent = CH[Math.floor(Math.random() * CH.length)]; if(++n >= spins){ clearInterval(t); c.el.textContent = c.ch; } }, 42 + idx * 4);
     });
   }
-  if('IntersectionObserver' in window) new IntersectionObserver(function(e){ if(e[0].isIntersecting) roll(); }, { threshold:.4 }).observe(board); else roll();
   board.addEventListener('click', function(){
     var old = cp.textContent;
     if(HAS){ if(navigator.clipboard) navigator.clipboard.writeText(CA); cp.textContent = 'Copied'; } else cp.textContent = 'Not yet';
